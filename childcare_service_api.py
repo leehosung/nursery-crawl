@@ -15,8 +15,9 @@ class ChildcareServiceApi(object):
         result = self.client.service.ChildFacilityItem("01", facility_id)
         return result
 
-    def get_child_facility_list(self):
-        pass
+    def get_child_facility_list(self, page_num):
+        result = self.client.service.ChildFacilityList(SearchKind="01", PageNum=page_num)
+        return result
 
     def get_application_waiting_result_item(self):
         pass
