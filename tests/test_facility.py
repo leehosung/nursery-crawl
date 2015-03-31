@@ -9,7 +9,12 @@ from facility import *
 class FacilityTestCase(unittest.TestCase):
 
     def test_crawl_facilities(self):
-        facilities = [x for x in Facility.crawl_facilities()]
+        facilities = [x for x in Facility.crawl_facilities(limit=20)]
+        for f in facilities:
+            if f.facility_name == "새싹어린이집":
+                break
+        else:
+            self.fail()
 
     def test_crawl_facility_info(self):
         f = Facility(11215000106)

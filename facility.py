@@ -8,8 +8,13 @@ class Facility(object):
         self.cs_api = ChildcareServiceApi()
 
     @staticmethod
-    def crawl_facilities():
-        yield
+    def crawl_facilities(limit=None):
+        cs_api = ChildcareServiceApi()
+        page_num = 1
+        while True:
+            response = cs_api.get_child_facility_list(page_num)
+            print(response)
+            break
 
     def crawl_facility_info(self):
         response = self.cs_api.get_child_facility_item(self.facility_id)
