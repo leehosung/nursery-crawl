@@ -28,7 +28,9 @@ class Facility(object):
                 break
 
     def crawl_facility_info(self):
-        logger.debug("Get facility info using API : facility_id=%d", self.facility_id)
+        logger.debug(
+            "Get facility info using API : facility_id=%d", self.facility_id
+        )
         response = Facility.cs_api.get_child_facility_item(self.facility_id)
 
         # ChildFacilityInfo
@@ -44,9 +46,11 @@ class Facility(object):
         self.telephone = info.Telephone
         self.address = ' '.join(info.Address.split())
         self.gov_support = True if info.GovSupport == 'Y' else False
-        self.accident_insurance = True if info.AccientInsurance == 'Y' else False
+        self.accident_insurance = True \
+            if info.AccientInsurance == 'Y' else False
         self.fire_insurance = True if info.FireInsurance == 'Y' else False
-        self.compensation_insurance = True if info.CompensationInsurance == 'Y' else False
+        self.compensation_insurance = True \
+            if info.CompensationInsurance == 'Y' else False
 
         # ChildcarePrice
         prices = response.ChildcarePrice
@@ -72,4 +76,3 @@ class Facility(object):
         self.photos = []
         for k, v in photos:
             self.photos.append(v)
-

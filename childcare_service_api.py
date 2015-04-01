@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 class ChildcareServiceApi(object):
 
     def __init__(self):
-        url = "https://s3-ap-northeast-1.amazonaws.com/nursery.novice.io/ReservateChildcareService.xml"
+        url = "https://s3-ap-northeast-1.amazonaws.com" \
+            "/nursery.novice.io/ReservateChildcareService.xml"
         self.client = Client(url)
         common_msg = self.client.factory.create('ComMsgHeaderRequest')
         common_msg.ServiceKey = CHILDCARE_SERVICE_KEY
@@ -21,7 +22,9 @@ class ChildcareServiceApi(object):
         return result
 
     def get_child_facility_list(self, page_num):
-        result = self.client.service.ChildFacilityList(SearchKind="01", PageNum=page_num)
+        result = self.client.service.ChildFacilityList(
+            SearchKind="01", PageNum=page_num
+        )
         return result
 
     def get_application_waiting_result_item(self):

@@ -1,7 +1,6 @@
 import unittest
 from datetime import datetime
-import os
-from facility import *
+from facility import Facility
 
 
 class FacilityTestCase(unittest.TestCase):
