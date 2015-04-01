@@ -1,0 +1,4 @@
+dynamodb:
+    image: deangiberson/aws-dynamodb-local
+    ports:
+        - "8010:8000"
