@@ -1,120 +1,84 @@
-import requests
-import xmltodict
-import logging
-import os
+import argparse
 import json
-import logging.handlers
+import logging.config
 from settings import *
-
-from tinydb import TinyDB, where
-
-from bs4 import BeautifulSoup
-
-
-logger = logging.getLogger('nursery')
-logger.setLevel(min(CONSOLE_LOG_LEVEL, FILE_LOG_LEVEL))
-formatter = logging.Formatter(LOG_FORMAT)
-
-ch = logging.StreamHandler()
-ch.setLevel(CONSOLE_LOG_LEVEL)
-ch.setFormatter(formatter)
-logger.addHandler(ch)
-
-fh = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes=10*1024*1024, backupCount=5)
-fh.setLevel(FILE_LOG_LEVEL)
-fh.setFormatter(formatter)
-logger.addHandler(fh)
 
 
 class NotFound(Exception):
     pass
 
 
-def crawl_arcodes(db_filename=DB_FILENAME):
-    db = TinyDB(db_filename)
-    table = db.table("area")
-    for arname in ARNAMES:
-       rs = crawl_arcode(arname)
-       for r in rs:
-           table.insert(r)
+def setup_logging(default_path='logging.json', default_level=logging.INFO, env_key='LOG_CFG'):
+    """Setup logging configuration"""
+    value = os.getenv(env_key, None)
+    path = defaut_path if not value else value
+    if os.path.exists(path):
+        with open(path, 'rt') as f:
+            config = json.load(f)
+        logging.config.dictConfig(config)
+    else:
+        logging.basicConfig(level=default_level)
 
 
-def crawl_arcode(arname):
-    uri = "http://api.childcare.go.kr/mediate/rest/cpmsapi020/cpmsapi020/request?key=%s&arname=%s" % (API020_KEY, arname)
-    rs = xmltodict.parse(requests.get(uri).text)['response']['item']
-    logger.debug("%d area are crawled with %s" % (len(rs), arname))
-    return rs
 
+class Crawler(object):
 
-def crawl_nurseries(db_filename=DB_FILENAME):
-    db = TinyDB(db_filename)
-    area_table = db.table("area")
-    nursery_table = db.table("nursery")
-    for area in area_table.all():
-        ns = crawl_nurseries_in_area(area)
-        for n in ns:
-            nursery_table.insert(n.__dict__)
+    def __init__(self):
+        setup_logging()
 
-def crawl_nurseries_in_area(area, max_tolerance=20):
-    index = 0
-    tolerance = 0
-    nurseries = []
-    while True:
-        stcode = "%s%06d" % (area["arcode"], index)
-        n = Nursery(stcode)
-        try:
-            n.get_summary()
-        except NotFound:
-            tolerance += 1
-            if tolerance > max_tolerance:
-                break
-        except Exception:
-            print("Can't get summary : %s" % stcode)
-            raise
-        else:
-            tolerance = 0
-            nurseries.append(n)
-        index += 1
-    logger.debug("%d nurseries are crawled in %s/%s" % (len(nurseries), area["sidoname"], area["sigunname"]))
-    return nurseries
+    def crawl_arcodes(self, db_filename=DB_FILENAME):
+        for arname in ARNAMES:
+           rs = self._crawl_arcode(arname)
+           for r in rs:
+                print(rs)
 
-class Nursery(object):
+    def _crawl_arcode(self, arname):
+        uri = "http://api.childcare.go.kr/mediate/rest/cpmsapi020/cpmsapi020/request?key=%s&arname=%s" % (API020_KEY, arname)
+        rs = xmltodict.parse(requests.get(uri).text)['response']['item']
+        self.logger.debug("%d area are crawled with %s" % (len(rs), arname))
+        return rs
 
-    def __init__(self, stcode):
-        self.stcode = stcode
+    def crawl_nurseries(self, db_filename=DB_FILENAME):
+        db = TinyDB(db_filename)
+        area_table = db.table("area")
+        nursery_table = db.table("nursery")
+        for area in area_table.all():
+            ns = crawl_nurseries_in_area(area)
+            for n in ns:
+                nursery_table.insert(n.__dict__)
 
-    def get_summary(self):
-        uri = "http://info.childcare.go.kr/info/pnis/search/preview/SummaryInfoSlPu.jsp?flag=YJ&STCODE_POP=%s" % self.stcode
-        response = requests.get(uri)
-        soup = BeautifulSoup(response.text)
-        self.name = soup.find("p", {"class": "mainTitle"}).text
-        if self.name == "":
-            raise NotFound
-        taL = soup.find("td", {"class": "taL"}).text.strip()
-        ts = taL.split("\n")
-        self.zip_code = ts[0].strip().replace('(', '').replace(')', '')
-        self.address = ts[1].strip().replace(u'\xa0', u' ')
-        self.type = soup.find('table', {'class': 'table_01'}).find('a', text="어린이집 유형").parent.parent.findNext('td').text
+    def crawl_nurseries_in_area(self, area, max_tolerance=20):
+        index = 0
+        tolerance = 0
+        nurseries = []
+        while True:
+            stcode = "%s%06d" % (area["arcode"], index)
+            n = Nursery(stcode)
+            try:
+                n.get_summary()
+            except NotFound:
+                tolerance += 1
+                if tolerance > max_tolerance:
+                    break
+            except Exception:
+                print("Can't get summary : %s" % stcode)
+                raise
+            else:
+                tolerance = 0
+                nurseries.append(n)
+            index += 1
+        self.logger.debug("%d nurseries are crawled in %s/%s" % (len(nurseries), area["sidoname"], area["sigunname"]))
+        return nurseries
 
-        coord = self.addr2coord(self.address)
-        if coord == None:
-            logger.error("[%s]%s can't get coordiation" % (self.stcode, self.name))
-        else:
-            self.lat = coord['lat']
-            self.lng = coord['lng']
-        logger.debug("[%s]%s is crawled" % (self.stcode, self.name))
-
-    def addr2coord(self, address):
-        daum_local_api = "https://apis.daum.net/local/geo/addr2coord?apikey=%s&q=%s&output=json"
-        response = requests.get(daum_local_api % (DAUM_KEY, address))
-        result = json.loads(response.text)
-        if int(result["channel"]["totalCount"]) > 0:
-            return result["channel"]["item"][0]
-        else:
-            return None
+def parse():
+    parser = argparse.ArgumentParser(description="Crawl nurseries")
+    parser.add_argument('--arcode', action='store_const', const=True, default=False, help='crawl area codes')
+    return parser.parse_args()
 
 
 if __name__ == '__main__':
-    os.remove(DB_FILENAME)
-    crawl_arcodes()
-    crawl_nurseries()
+    crawler = Crawler()
+    args = parse()
+    if args.arcode:
+        crawler.crawl_arcodes()
+
