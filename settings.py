@@ -18,4 +18,4 @@ CONSOLE_LOG_LEVEL = logging.DEBUG
 FILE_LOG_LEVEL = logging.DEBUG
 
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-LOG_FILENAME = 'nursery.log'
+LOG_FILENAME = 'nursery-crawl.log'
