@@ -4,6 +4,9 @@ import requests
 import logging
 
 
+logger = logging.getLogger(__name__)
+
+
 class Area(object):
 
     def __init__(self, sidoname, sigunname, arcode):
@@ -26,13 +29,14 @@ class Area(object):
     @staticmethod
     def crawl_areas():
         for arname in ARNAMES:
-           rs = Area.crawl_area(arname)
-           for r in rs:
-               yield Area(**r)
+            rs = Area.crawl_area(arname)
+            for r in rs:
+                yield Area(**r)
 
     @staticmethod
     def crawl_area(arname):
-        uri = "http://api.childcare.go.kr/mediate/rest/cpmsapi020/cpmsapi020/request?key=%s&arname=%s" % (API020_KEY, arname)
+        uri = "http://api.childcare.go.kr/mediate/rest/cpmsapi020/cpmsapi020/" \
+              "request?key=%s&arname=%s" % (API020_KEY, arname)
         rs = xmltodict.parse(requests.get(uri).text)['response']['item']
-        logging.debug("%d area are crawled with %s" % (len(rs), arname))
+        logger.debug("%d areas are crawled with %s" % (len(rs), arname))
         return rs
