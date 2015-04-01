@@ -1,23 +1,35 @@
-from childcare_service_api import ChildcareServiceApi
+import logging
 from datetime import datetime
+
+from childcare_service_api import ChildcareServiceApi
+
+logger = logging.getLogger(__name__)
+
 
 class Facility(object):
 
+    cs_api = ChildcareServiceApi()
+
     def __init__(self, facility_id):
-        self.facility_id = facility_id
-        self.cs_api = ChildcareServiceApi()
+        self.facility_id = int(facility_id)
 
     @staticmethod
     def crawl_facilities(limit=None):
-        cs_api = ChildcareServiceApi()
         page_num = 1
+        count = 1
         while True:
-            response = cs_api.get_child_facility_list(page_num)
-            print(response)
-            break
+            r = Facility.cs_api.get_child_facility_list(page_num)
+            for f in r.ChildFacilityList:
+                facility = Facility(f.FacilityID)
+                facility.crawl_facility_info()
+                yield facility
+                count += 1
+            if r.TotalPageNumber == r.PageNumber or limit == count:
+                break
 
     def crawl_facility_info(self):
-        response = self.cs_api.get_child_facility_item(self.facility_id)
+        logger.debug("Get facility info using API : facility_id=%d", self.facility_id)
+        response = Facility.cs_api.get_child_facility_item(self.facility_id)
 
         # ChildFacilityInfo
         info = response.ChildFacilityInfo

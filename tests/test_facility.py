@@ -1,7 +1,5 @@
 import unittest
 from datetime import datetime
-import sys
-sys.path.insert(0, '..')
 import os
 from facility import *
 
@@ -9,7 +7,7 @@ from facility import *
 class FacilityTestCase(unittest.TestCase):
 
     def test_crawl_facilities(self):
-        facilities = [x for x in Facility.crawl_facilities(limit=20)]
+        facilities = [x for x in Facility.crawl_facilities(limit=10)]
         for f in facilities:
             if f.facility_name == "새싹어린이집":
                 break
