@@ -1,6 +1,10 @@
+import logging
+
 from suds.client import Client
-from suds.sax.element import Element
 from settings import CHILDCARE_SERVICE_KEY
+
+logger = logging.getLogger(__name__)
+
 
 class ChildcareServiceApi(object):
 
@@ -12,6 +16,7 @@ class ChildcareServiceApi(object):
         self.client.set_options(soapheaders=common_msg)
 
     def get_child_facility_item(self, facility_id):
+        logger.debug("Get child facility item : facility_id=%s", facility_id)
         result = self.client.service.ChildFacilityItem("01", facility_id)
         return result
 
