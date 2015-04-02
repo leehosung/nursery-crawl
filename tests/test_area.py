@@ -1,8 +1,5 @@
 import unittest
-import sys
-sys.path.insert(0, '..')
-import os
-from area import *
+from area import Area
 
 
 class AreaTestCase(unittest.TestCase):

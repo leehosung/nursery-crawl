@@ -1,8 +1,5 @@
 import unittest
-import sys
-sys.path.insert(0, '..')
-import os
-from childcare_service_api import *
+from childcare_service_api import ChildcareServiceApi
 
 
 class ChildcareServiceApiTestCase(unittest.TestCase):
