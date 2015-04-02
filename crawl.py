@@ -31,10 +31,14 @@ class Crawler(object):
     def __init__(self):
         setup_logging()
 
-    def crawl_arcodes(self):
-        areas = [x for x in Area.crawl_areas()]
-        for area in areas:
-            print(area)
+    def crawl_arcodes(self, limit=None, connection=None):
+        count = 0
+        for area in Area.crawl_areas():
+            if limit is not None and count >= limit:
+                break
+            area.save(connection)
+            count += 1
+        return count
 
 
 def parse():
