@@ -1,28 +1,17 @@
 import unittest
 
-from boto.dynamodb2.layer1 import DynamoDBConnection
-from boto.dynamodb2.table import Table
-from boto.dynamodb2.fields import HashKey
-from boto.dynamodb2.types import NUMBER
-
 from area import Area
+from test_common import MixinTestCase
 
-class AreaTestCase(unittest.TestCase):
+
+class AreaTestCase(MixinTestCase):
 
     def setUp(self):
-        self.conn = DynamoDBConnection(
-            host='localhost',
-            port=8010,
-            aws_access_key_id='unittest',
-            aws_secret_access_key='unittest',
-            is_secure=False
-        )
-        if 'areas' in self.conn.list_tables()["TableNames"]:
-            Table('areas', connection=self.conn).delete()
-        self.table = Table.create('areas', schema=[HashKey('arcode', data_type=NUMBER)], connection=self.conn)
+        self.connect_local_dynamodb()
+        self.create_table('areas', 'arcode')
 
     def tearDown(self):
-        self.table.delete()
+        self.delete_table()
 
     def test_crawl_arcode(self):
         rs = Area.crawl_area('제주도')
