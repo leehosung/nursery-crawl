@@ -3,6 +3,8 @@ import xmltodict
 import requests
 import logging
 
+from boto.dynamodb2.table import Table
+
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +25,9 @@ class Area(object):
         else:
             return False
 
-    def save(self):
-        pass
+    def save(self, connection=None):
+        areas = Table('areas', connection=connection)
+        areas.put_item(data=self.__dict__)
 
     @staticmethod
     def crawl_areas():
