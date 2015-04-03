@@ -26,8 +26,8 @@ class Area(object):
             return False
 
     def save(self, connection=None):
-        areas = Table('areas', connection=connection)
-        areas.put_item(data=self.__dict__)
+        areas = Table('area', connection=connection)
+        areas.put_item(data=self.__dict__, overwrite=True)
 
     @staticmethod
     def crawl_areas():
