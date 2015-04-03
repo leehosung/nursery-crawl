@@ -8,7 +8,7 @@ class AreaTestCase(MixinTestCase):
 
     def setUp(self):
         self.connect_local_dynamodb()
-        self.create_table('areas', 'arcode')
+        self.create_table('area', 'arcode')
 
     def tearDown(self):
         self.delete_table()

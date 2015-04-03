@@ -6,8 +6,7 @@ from facility import Facility
 class FacilityTestCase(unittest.TestCase):
 
     def test_crawl_facilities(self):
-        facilities = [x for x in Facility.crawl_facilities(limit=10)]
-        for f in facilities:
+        for f in Facility.crawl_facilities(limit=10):
             if f.facility_name == "새싹어린이집":
                 break
         else:
@@ -56,6 +55,14 @@ class FacilityTestCase(unittest.TestCase):
 
         self.assertEqual(5, len(f.photos))
 
+    def test_save(self):
+        f = Facility(11215000106)
+        f.crawl_facility_info()
+        f.save()
+
+    def test_without_photo(self):
+        f = Facility(11350000228)
+        f.crawl_facility_info()
 
 if __name__ == '__main__':
     unittest.main()

@@ -16,12 +16,13 @@ class ChildcareServiceApi(object):
         common_msg.ServiceKey = CHILDCARE_SERVICE_KEY
         self.client.set_options(soapheaders=common_msg)
 
-    def get_child_facility_item(self, facility_id):
-        logger.debug("Get child facility item : facility_id=%s", facility_id)
+    def get_child_facility_item(self, search_kind, facility_id):
+        logger.debug("Get child facility item : search_kind=%s, facility_id=%s", search_kind, facility_id)
         result = self.client.service.ChildFacilityItem("01", facility_id)
         return result
 
-    def get_child_facility_list(self, page_num):
+    def get_child_facility_list(self, search_kind, page_num):
+        logger.debug("Get child facility list : search_kind=%s, page_num=%s", search_kind, page_num)
         result = self.client.service.ChildFacilityList(
             SearchKind="01", PageNum=page_num
         )
