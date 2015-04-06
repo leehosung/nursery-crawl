@@ -3,5 +3,4 @@
 __pycache__
 *.log
 *.swp
-DynamoDBLocal
 local_settings.py
