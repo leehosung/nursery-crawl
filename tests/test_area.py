@@ -11,7 +11,7 @@ class AreaTestCase(MixinTestCase):
         self.create_table('area', 'arcode')
 
     def tearDown(self):
-        self.delete_table()
+        self.delete_tables()
 
     def test_crawl_arcode(self):
         rs = Area.crawl_area('제주도')
@@ -32,7 +32,7 @@ class AreaTestCase(MixinTestCase):
     def test_save(self):
         area = Area('서울특별시', '강북구', 11305)
         area.save(connection=self.conn)
-        received_area = self.table.get_item(arcode=11305)
+        received_area = self.tables[0].get_item(arcode=11305)
         self.assertEqual(area.sigunname, received_area['sigunname'])
 
 
