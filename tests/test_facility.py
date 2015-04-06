@@ -1,9 +1,17 @@
 import unittest
 from datetime import datetime
 from facility import Facility
+from test_common import MixinTestCase
 
 
-class FacilityTestCase(unittest.TestCase):
+class FacilityTestCase(MixinTestCase):
+
+    def setUp(self):
+        self.connect_local_dynamodb()
+        self.create_table('facility', 'facility_id')
+
+    def tearDown(self):
+        self.delete_tables()
 
     def test_crawl_facilities(self):
         for f in Facility.crawl_facilities(limit=10):
@@ -58,7 +66,7 @@ class FacilityTestCase(unittest.TestCase):
     def test_save(self):
         f = Facility(11215000106)
         f.crawl_facility_info()
-        f.save()
+        f.save(self.conn)
 
     def test_without_photo(self):
         f = Facility(11350000228)

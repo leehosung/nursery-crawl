@@ -9,7 +9,7 @@ class CrawlerTestCase(MixinTestCase):
     def setUp(self):
         self.crawler = Crawler()
         self.connect_local_dynamodb()
-        self.create_table('areas', 'arcode')
+        self.create_table('area', 'arcode')
         self.create_table('nursery', 'facility_id')
 
     def tearDown(self):
