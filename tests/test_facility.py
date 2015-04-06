@@ -13,12 +13,31 @@ class FacilityTestCase(MixinTestCase):
     def tearDown(self):
         self.delete_tables()
 
+    def test_get_all_facilities(self):
+        fs = Facility.get_all_facilities(connection=self.conn)
+        self.assertEqual(0, len(fs))
+        f = Facility(11215000106)
+        f.crawl_facility_info()
+        f.save(self.conn)
+        fs = Facility.get_all_facilities(connection=self.conn)
+        self.assertEqual(1, len(fs))
+
     def test_crawl_facilities(self):
-        for f in Facility.crawl_facilities(limit=10):
-            if f.facility_name == "새싹어린이집":
-                break
-        else:
-            self.fail()
+        fs = [x for x in Facility.crawl_facilities(
+            limit=10, connection=self.conn)]
+        self.assertEqual(10, len(fs))
+        f = fs[0]
+        self.assertEqual("새싹어린이집", f.facility_name)
+        self.assertEqual(False, f.certification)
+        self.assertEqual(False, f.seoul)
+        self.assertEqual("민간개인", f.cr_type)
+        self.assertTrue(hasattr(f, "waiting_entrance"))
+        self.assertTrue(hasattr(f, "fixed_number"))
+        self.assertTrue(hasattr(f, "present_number"))
+        self.assertEqual("02-457-7702", f.telephone)
+        self.assertEqual("- -", f.fax)
+        self.assertEqual("서울 광진구 자양2동 682-4 1층", f.address)
+        self.assertTrue(hasattr(f, "updated"))
 
     def test_crawl_facility_info(self):
         f = Facility(11215000106)
@@ -63,7 +82,14 @@ class FacilityTestCase(MixinTestCase):
 
         self.assertEqual(5, len(f.photos))
 
+        self.assertTrue(hasattr(f, "detail_updated"))
+
     def test_save(self):
+        # test save
+        f = Facility(11215000106)
+        f.crawl_facility_info()
+        f.save(self.conn)
+        # test update
         f = Facility(11215000106)
         f.crawl_facility_info()
         f.save(self.conn)

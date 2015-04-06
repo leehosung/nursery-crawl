@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import logging.config
 import os
 import sys
@@ -7,6 +8,7 @@ import sys
 from area import Area
 from facility import Nursery
 
+logger = logging.getLogger("nursery-crawl")
 
 class NotFound(Exception):
     pass
@@ -40,6 +42,7 @@ class Crawler(object):
                 break
             area.save(connection)
             count += 1
+        logger.info("%d areas are crawled" % count)
         return count
 
     def crawl_nurseries(self, limit=sys.maxsize, connection=None):
@@ -49,6 +52,21 @@ class Crawler(object):
                 break
             nursery.save(connection)
             count += 1
+        logger.info("%d nurseries are crawled" % count)
+        return count
+
+    def crawl_nursery_details(self, limit=sys.maxsize, connection=None):
+        count = 0
+        rs = Nursery.get_all_facilities()
+        rs = sorted(rs, key=lambda nursery: nursery.get("detail_updated", ""))
+        for r in rs:
+            if count >= limit:
+                break
+            nursery = Nursery(r["facility_id"])
+            nursery.crawl_facility_info()
+            nursery.save(connection)
+            count += 1
+        logger.info("%d nursery details are crawled" % count)
         return count
 
 
@@ -62,6 +80,13 @@ def parse():
         '--nursery', action='store_const', const=True,
         default=False, help='crawl nurseries'
     )
+    parser.add_argument(
+        '--nursery_detail', action='store_const', const=True,
+        default=False, help='crawl nursery details'
+    )
+    parser.add_argument(
+        '--limit', default=sys.maxsize, type=int, help='crawl limit count'
+    )
     return parser.parse_args()
 
 
@@ -69,6 +94,8 @@ if __name__ == '__main__':
     crawler = Crawler()
     args = parse()
     if args.arcode:
-        crawler.crawl_arcodes()
+        crawler.crawl_arcodes(limit=args.limit)
     if args.nursery:
-        crawler.crawl_nurseries()
+        crawler.crawl_nurseries(limit=args.limit)
+    if args.nursery_detail:
+        crawler.crawl_nursery_details(limit=args.limit)

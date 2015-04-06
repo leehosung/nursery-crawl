@@ -1,8 +1,12 @@
 import logging
 from datetime import datetime
 import sys
+from time import sleep
 
 from boto.dynamodb2.table import Table
+from boto.dynamodb2.items import Item
+from boto.dynamodb2.exceptions import ItemNotFound
+
 
 from childcare_service_api import ChildcareServiceApi
 
@@ -17,29 +21,55 @@ class Facility(object):
 
     def __init__(self, facility_id):
         self.facility_id = int(facility_id)
+        self.facility_name = ''
+
+    def __str__(self):
+        return "[%s] %s" % (self.facility_id, self.facility_name)
 
     @classmethod
-    def crawl_facilities(cls, limit=sys.maxsize):
+    def get_all_facilities(cls, connection=None):
+        table = Table(cls.table_name, connection=connection)
+        return list(table.scan())
+
+    @classmethod
+    def crawl_facilities(cls, limit=sys.maxsize, connection=None):
         page_num = 1
         count = 1
         while True:
             r = cls.cs_api.get_child_facility_list(cls.search_kind, page_num)
             for f in r.ChildFacilityList:
                 facility = cls(f.FacilityID)
-                facility.crawl_facility_info()
+                facility.update_from_list(f)
+                facility.save(connection=connection)
+                logger.debug(
+                    "Get facility from list API : facility=%s", facility
+                )
                 yield facility
-                count += 1
                 if limit <= count:
                     break
+                else:
+                    count += 1
+                    # To avoid dynamodb write limit
+                    sleep(0.5)
             if r.TotalPageNumber == r.PageNumber or limit <= count:
                 break
             else:
                 page_num += 1
 
+    def update_from_list(self, info):
+        self.facility_name = info.FacilityName
+        self.certification = True if info.Certification == 'Y' else False
+        self.seoul = True if info.Seoul == 'Y' else False
+        self.cr_type = info.Type
+        self.waiting_entrance = info.WaitingEnterance
+        self.fixed_number = info.FixedNumber
+        self.present_number = info.PresentNumber
+        self.telephone = info.Telephone
+        self.fax = info.Fax.strip()
+        self.address = ' '.join(info.Address.split())
+        self.updated = datetime.now()
+
     def crawl_facility_info(self):
-        logger.debug(
-            "Get facility info using API : facility_id=%d", self.facility_id
-        )
         response = Facility.cs_api.get_child_facility_item(self.search_kind, self.facility_id)
 
         # ChildFacilityInfo
@@ -87,14 +117,26 @@ class Facility(object):
             for k, v in photos:
                 self.photos.append(v)
 
+        self.detail_updated = datetime.now()
+
+        logger.debug(
+            "Get facility from detail API : facility=%s", self
+        )
+
     def save(self, connection=None):
         data = self.__dict__
-        self.updated = datetime.now()
         for k, v in data.items():
             if type(v) == datetime:
                 data[k] = v.isoformat()
         table = Table(self.table_name, connection=connection)
-        table.put_item(data=data, overwrite=True)
+        try:
+            item = table.get_item(facility_id=self.facility_id)
+        except ItemNotFound:
+            table.put_item(data=data, overwrite=True)
+        else:
+            for k, v in data.items():
+                item[k] = v
+            item.save()
 
 
 class Nursery(Facility):

@@ -16,12 +16,16 @@ class CrawlerTestCase(MixinTestCase):
         self.delete_tables()
 
     def test_crawl_arcodes(self):
-        count = self.crawler.crawl_arcodes(limit=10, connection=self.conn)
-        self.assertEqual(count, 10)
+        count = self.crawler.crawl_arcodes(limit=5, connection=self.conn)
+        self.assertEqual(count, 5)
 
     def test_crawl_nurseries(self):
-        count = self.crawler.crawl_nurseries(limit=10, connection=self.conn)
-        self.assertEqual(count, 10)
+        count = self.crawler.crawl_nurseries(limit=5, connection=self.conn)
+        self.assertEqual(count, 5)
+
+    def test_crawl_nursery_details(self):
+        count = self.crawler.crawl_nursery_details(limit=5, connection=self.conn)
+        self.assertEqual(count, 5)
 
 
 if __name__ == '__main__':
