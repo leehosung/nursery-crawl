@@ -1,9 +1,12 @@
 import unittest
+import logging
 
 from boto.dynamodb2.layer1 import DynamoDBConnection
 from boto.dynamodb2.table import Table
 from boto.dynamodb2.fields import HashKey
 from boto.dynamodb2.types import NUMBER
+
+logger = logging.getLogger(__name__)
 
 
 class MixinTestCase(unittest.TestCase):
@@ -21,11 +24,12 @@ class MixinTestCase(unittest.TestCase):
             is_secure=False)
 
     def create_table(self, table_name, hashkey_name):
+        logger.debug("creating table : table_name=%s, hashkey_name=%s", table_name, hashkey_name)
         if table_name in self.conn.list_tables()["TableNames"]:
             Table(table_name, connection=self.conn).delete()
         table = Table.create(table_name, schema=[HashKey(hashkey_name, data_type=NUMBER)], connection=self.conn)
         self.tables.append(table)
 
     def delete_tables(self):
-        for table in self.tables:
-            table.delete()
+        for table_name in self.conn.list_tables()["TableNames"]:
+            Table(table_name, connection=self.conn).delete()
