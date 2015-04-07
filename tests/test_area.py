@@ -32,7 +32,7 @@ class AreaTestCase(MixinTestCase):
     def test_save(self):
         area = Area('서울특별시', '강북구', 11305)
         area.save(connection=self.conn)
-        received_area = self.tables[0].get_item(arcode=11305)
+        received_area = self.tables['area'].get_item(arcode=11305)
         self.assertEqual(area.sigunname, received_area['sigunname'])
 
 
