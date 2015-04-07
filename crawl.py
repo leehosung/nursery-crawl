@@ -7,11 +7,9 @@ import sys
 
 from area import Area
 from facility import Nursery
+from exceptions import APILimitError
 
 logger = logging.getLogger("nursery-crawl")
-
-class NotFound(Exception):
-    pass
 
 
 def setup_logging(
@@ -62,9 +60,13 @@ class Crawler(object):
         for r in rs:
             if count >= limit:
                 break
-            nursery = Nursery(r["facility_id"])
-            nursery.crawl_facility_info()
-            nursery.save(connection)
+            try:
+                nursery = Nursery(r["facility_id"])
+                nursery.crawl_facility_info()
+                nursery.save(connection)
+            except APILimitError as e:
+                logger.error(e)
+                break
             count += 1
         logger.info("%d nursery details are crawled" % count)
         return count

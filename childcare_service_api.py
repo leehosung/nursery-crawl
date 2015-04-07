@@ -1,6 +1,8 @@
 import logging
 
 from suds.client import Client
+
+from exceptions import APILimitError
 from settings import CHILDCARE_SERVICE_KEY
 
 logger = logging.getLogger(__name__)
@@ -18,7 +20,10 @@ class ChildcareServiceApi(object):
 
     def get_child_facility_item(self, search_kind, facility_id):
         logger.debug("Get child facility item : search_kind=%s, facility_id=%s", search_kind, facility_id)
-        result = self.client.service.ChildFacilityItem("01", facility_id)
+        try:
+            result = self.client.service.ChildFacilityItem("01", facility_id)
+        except AttributeError:
+            raise APILimitError("Getting child faiclity item API exceeds limit : facility_id=%s" % facility_id)
         return result
 
     def get_child_facility_list(self, search_kind, page_num):
