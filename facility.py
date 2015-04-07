@@ -7,8 +7,8 @@ from boto.dynamodb2.table import Table
 from boto.dynamodb2.items import Item
 from boto.dynamodb2.exceptions import ItemNotFound
 
-
 from childcare_service_api import ChildcareServiceApi
+from util import addr2coord
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +56,14 @@ class Facility(object):
             else:
                 page_num += 1
 
+    def get_coordination(self):
+        a2c_result = addr2coord(self.address)
+        if a2c_result is None:
+            logger.warn("can not get coordination : facility_id=%d, facility_name=%s, address=%s", self.facility_id, self.facility_name, self.address)
+        else:
+            self.lat = str(a2c_result["lat"])
+            self.lng = str(a2c_result["lng"])
+
     def update_from_list(self, info):
         self.facility_name = info.FacilityName
         self.certification = True if info.Certification == 'Y' else False
@@ -67,6 +75,7 @@ class Facility(object):
         self.telephone = info.Telephone
         self.fax = info.Fax.strip()
         self.address = ' '.join(info.Address.split())
+        self.get_coordination()
         self.updated = datetime.now()
 
     def crawl_facility_info(self):
@@ -84,6 +93,7 @@ class Facility(object):
         self.vehicle = True if info.Vehicle == 'Y' else False
         self.telephone = info.Telephone
         self.address = ' '.join(info.Address.split())
+        self.get_coordination()
         self.gov_support = True if info.GovSupport == 'Y' else False
         self.accident_insurance = True \
             if info.AccientInsurance == 'Y' else False
