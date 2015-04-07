@@ -61,11 +61,14 @@ class Crawler(object):
 
     def crawl_nurseries(self, limit=sys.maxsize, dynamo_conn=None):
         count = 0
-        for nursery in Nursery.crawl_facilities():
-            if count >= limit:
-                break
-            nursery.save(dynamo_conn)
-            count += 1
+        try:
+            for nursery in Nursery.crawl_facilities():
+                if count >= limit:
+                    break
+                nursery.save(dynamo_conn)
+                count += 1
+        except APILimitError as e:
+            logger.error(e)
         logger.info("%d nurseries are crawled" % count)
         return count
 
