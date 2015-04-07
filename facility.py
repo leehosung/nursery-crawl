@@ -8,7 +8,7 @@ from boto.dynamodb2.items import Item
 from boto.dynamodb2.exceptions import ItemNotFound
 
 from childcare_service_api import ChildcareServiceApi
-from util import addr2coord
+from util import addr2coord, info2coord
 
 logger = logging.getLogger(__name__)
 
@@ -57,12 +57,13 @@ class Facility(object):
                 page_num += 1
 
     def get_coordination(self):
-        a2c_result = addr2coord(self.address)
-        if a2c_result is None:
-            logger.warn("can not get coordination : facility_id=%d, facility_name=%s, address=%s", self.facility_id, self.facility_name, self.address)
-        else:
-            self.lat = str(a2c_result["lat"])
-            self.lng = str(a2c_result["lng"])
+        result = addr2coord(self.address)
+        if result is None:
+            logger.warn("can not get coordination by address : facility_id=%d, facility_name=%s, address=%s", self.facility_id, self.facility_name, self.address)
+            result = info2coord(self.facility_name, self.telephone, self.address)
+        if result is not None:
+            self.lat = str(result["lat"])
+            self.lng = str(result["lng"])
 
     def refine_data(self):
         for k, v in self.__dict__.items():
