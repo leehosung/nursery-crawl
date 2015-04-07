@@ -98,5 +98,10 @@ class FacilityTestCase(MixinTestCase):
         f = Facility(11350000228)
         f.crawl_facility_info()
 
+    def test_muti_spaces_in_facility_name(self):
+        f = Facility(11500000214)
+        f.crawl_facility_info()
+        self.assertEqual("우와 어린이집", f.facility_name)
+
 if __name__ == '__main__':
     unittest.main()

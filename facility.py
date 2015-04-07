@@ -64,6 +64,13 @@ class Facility(object):
             self.lat = str(a2c_result["lat"])
             self.lng = str(a2c_result["lng"])
 
+    def refine_data(self):
+        for k, v in self.__dict__.items():
+            try:
+                setattr(self, k, ' '.join(v.split()))
+            except AttributeError:
+                pass
+
     def update_from_list(self, info):
         self.facility_name = info.FacilityName
         self.certification = True if info.Certification == 'Y' else False
@@ -77,6 +84,7 @@ class Facility(object):
         self.address = ' '.join(info.Address.split())
         self.get_coordination()
         self.updated = datetime.now()
+        self.refine_data()
 
     def crawl_facility_info(self):
         response = Facility.cs_api.get_child_facility_item(self.search_kind, self.facility_id)
@@ -92,7 +100,7 @@ class Facility(object):
         self.open_date = datetime.strptime(info.OpenDate, "%Y-%m-%d")
         self.vehicle = True if info.Vehicle == 'Y' else False
         self.telephone = info.Telephone
-        self.address = ' '.join(info.Address.split())
+        self.address = info.Address
         self.get_coordination()
         self.gov_support = True if info.GovSupport == 'Y' else False
         self.accident_insurance = True \
@@ -128,6 +136,8 @@ class Facility(object):
                 self.photos.append(v)
 
         self.detail_updated = datetime.now()
+
+        self.refine_data()
 
         logger.debug(
             "Get facility from detail API : facility=%s", self
